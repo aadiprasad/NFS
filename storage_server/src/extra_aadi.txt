@@ -1,0 +1,103 @@
+
+
+int is_skippable (char *file) {
+    // flag that checks if the file is one of the directories to skip
+    return (strcmp(file, "..") == 0) || (strcmp(file, ".") == 0 || strcmp(file, "a.out") == 0 || strcmp(file, "storage_server.c") == 0); 
+} 
+
+
+/* Puts file list in ss->files and number of files in ss->dir_len. Returns -1 on failure, 0 on success. dir_len is -1 and files NULL on failure. */
+// int get_directory_structure (SSData *ss) 
+// {
+//     // iterables
+//     int i = 0; 
+//     char **files = (char **) malloc (sizeof(char *) * MAX_FILES);
+//     DIR *dp;
+//     struct dirent *ep; 
+//     char *dir = malloc(256); 
+//     getcwd(dir, 256);     
+//     dp = opendir (dir);
+    
+//     // loop
+//     if (dp != NULL)
+//     {
+//         while ((ep = readdir (dp)) != NULL) {
+//             if (!is_skippable(ep->d_name)) {
+//                 files[i] = calloc(strlen(ep->d_name) + 1, 1); 
+//                 strcpy(files[i], ep->d_name);
+//                 i++; 
+//             }
+//         }
+//         files[i] = NULL; 
+            
+//         (void) closedir (dp);
+//         ss->files = files; ss->dir_len = i; 
+//         return 0; 
+//     }
+//     else
+//     {
+//         perror ("Couldn't open the directory");
+//         ss->files = NULL; ss->dir_len = -1;
+//         return -1; 
+//     }
+// }
+
+int get_directory_structure (SSData *ss) {
+    char *output = NULL;
+    FILE *fp;
+    char *file_names[MAX_FILES];
+    int file_count = 0;
+    char *token, *saveptr;
+    char *delim = "\n";
+
+    char *dir = malloc(256); 
+    getcwd(dir, 256);
+
+    char command[MAX_PATH_LENGTH];
+
+    // Concatenate "tree " and the directory variable
+    strcpy(command, "tree \"");
+    strcat(command, dir);
+    strcat(command, "\"");
+
+    printf("[%s]\n", command);
+    // Capture the output of the 'tree [dir]' command
+    fp = popen(command, "r");
+    if (fp == NULL) {
+        perror("popen");
+        return -1;
+    }
+
+    // Read the output into a dynamically allocated string
+    output = malloc(256 * sizeof(char));
+    if (output == NULL) {
+        perror("malloc");
+        pclose(fp);
+        return -1;
+    }
+    fread(output, 1, MAX_PATH_LENGTH, fp);
+
+    // Parse the output to extract file names and locations
+    token = strtok_r(output, delim, &saveptr);
+    while (token != NULL && file_count < MAX_FILES) {
+        // Ignore directories, only store file names
+        if (strrchr(token, '/') != NULL) {
+            file_names[file_count++] = token;
+        }
+        token = strtok_r(NULL, delim, &saveptr);
+    }
+    file_names[file_count] = NULL;
+
+    // Print the file names and locations
+    for (int i = 0; i < file_count; i++) {
+        printf("%s\n", file_names[i]);
+    }
+
+    // Clean up
+    free(output);
+    pclose(fp);
+
+    ss->dir_len = file_count;
+    ss->files = file_names; 
+    return 0; 
+}

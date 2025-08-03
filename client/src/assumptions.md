@@ -1,0 +1,14 @@
+- read: file is stored in the directory of the client program. The user an finish reading and the file is removed from the directory
+- write: similarly, stored in the directory of the client program. The user may edit this file, changes shall show in the original server as well
+- copy: the file's contents are placed in the parent folder's directory
+- backup: the server "going down" implies the program stops working
+- stream works on .wav files only
+- Argument structure: 
+    - `CREATE /folder/path filename <is_file>`
+        (`0` for file, `1` for directory)
+    - `DELETE /folder/path filename`
+    - `STREAM/READ /file/name`
+    - `WRITE /file/name`
+    - `COPY /source/folder/file /dest/folder` 
+    - `SHOW` (equivalent to `ls`)
+- All directories begin with `/` and not `./`
